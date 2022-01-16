@@ -11,5 +11,14 @@ async function digestMessage(message) {
 
 function getInput() {
   let address = document.getElementById("address").value;
-  digestMessage(address).then(hex => console.log(hex));
+  digestMessage(address).then(hex => mapSound(hex));
 }
+
+function mapSound(hex) {
+  console.log(hex);
+  wave = new p5.Oscillator();
+  wave.setType('sine');
+  wave.start();
+  wave.freq(440);
+  wave.amp(0.01);
+  }
