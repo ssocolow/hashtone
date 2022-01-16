@@ -1,17 +1,15 @@
-
-const text = 'An obscure body in the S-K System, your majesty. The inhabitants refer to it as the planet Earth.';
-
+//https://developer.mozilla.org/en-US/docs/Web/API/SubtleCrypto/digest
 async function digestMessage(message) {
-  const encoder = new TextEncoder();
-  const data = encoder.encode(message);
-  const hash = await crypto.subtle.digest('SHA-256', data);
-  return hash;
+  const msgUint8 = new TextEncoder().encode(message);                           // encode as (utf-8) Uint8Array
+  const hashBuffer = await crypto.subtle.digest('SHA-256', msgUint8);           // hash the message
+  const hashArray = Array.from(new Uint8Array(hashBuffer));                     // convert buffer to byte array
+  const hashHex = hashArray.map(b => b.toString(16).padStart(2, '0')).join(''); // convert bytes to hex string
+  return hashHex;
 }
 
-let h = digestMessage(text);
-console.log(h);
+
 
 function getInput() {
   let address = document.getElementById("address").value;
-  console.log(address);
+  digestMessage(address).then(hex => console.log(hex));
 }
