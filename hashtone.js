@@ -17,6 +17,7 @@ function getInput() {
 //https://stackoverflow.com/questions/951021/what-is-the-javascript-version-of-sleep
 async function playSound(hex) {
   console.log(hex);
+  document.getElementById("hsh").innerHTML = hex;
   wave = new p5.Oscillator();
   wave.setType('sine');
   wave.start();
