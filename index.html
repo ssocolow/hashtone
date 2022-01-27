@@ -9,13 +9,15 @@
 
   </head>
   <body>
-    <h1>Paste in anything to get UTF-8 SHA-256 hash and its music</h1>
+    <h1>Paste in anything to get its unique UTF-8 SHA-256 hash, its tone, and its color!</h1>
     <script src="hashtone.js"></script>
     <form onsubmit="getInput(); return false;">
     <input id="address" autofocus>
     <button type="button" onclick="getInput()">Submit</button>
     </form>
 <h1 id="hsh"></h1>
+<canvas id="myCanvas" width="200" height="200"></canvas>
+<br>
 <a href="https://ssocolow.github.io">ME</a>
 </body>
 </html>

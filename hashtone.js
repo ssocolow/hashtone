@@ -6,6 +6,8 @@ async function digestMessage(message) {
   const msgUint8 = new TextEncoder().encode(message);                           // encode as (utf-8) Uint8Array
   const hashBuffer = await crypto.subtle.digest('SHA-256', msgUint8);           // hash the message
   const hashArray = Array.from(new Uint8Array(hashBuffer));                     // convert buffer to byte array
+  //first uint8 is red value, next is green, next is blue
+  colorHash(hashArray);
   const hashHex = hashArray.map(b => b.toString(16).padStart(2, '0')).join(''); // convert bytes to hex string
   return hashHex;
 }
@@ -19,7 +21,6 @@ function getInput() {
 
 //https://stackoverflow.com/questions/951021/what-is-the-javascript-version-of-sleep
 async function playSound(hex) {
-  console.log(hex);
   document.getElementById("hsh").innerHTML = hex;
   wave = new p5.Oscillator();
   //Options: 'sine' (default), 'triangle', 'sawtooth', 'square' (Optional)
@@ -83,4 +84,17 @@ function sleep(ms) {
 function changeSound(freq, amp) {
   wave.freq(freq);
   wave.amp(amp);
+}
+
+//make color for address
+function colorHash(ints) {
+  let c = document.getElementById("myCanvas");
+  let ctx = c.getContext("2d");
+  let rgb = [0,0,0];
+  console.log(ints); 
+  ctx.fillStyle = `rgb(
+        ${ints[0]},
+        ${ints[1]},
+        ${ints[2]})`;
+  ctx.fillRect(0,0,c.width,c.height);
 }
