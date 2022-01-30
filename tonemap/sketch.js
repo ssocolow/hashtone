@@ -68,6 +68,19 @@ async function playRaw(raw) {
   wave.stop();
 }
 
+
+//async so can play music with specific time intervals
+async function preamble() {
+  wave = new p5.Oscillator();
+  //Options: 'sine' (default), 'triangle', 'sawtooth', 'square' (Optional)
+  wave.setType('square');
+  wave.start();
+
+  //starting preamble to get the listener tracking
+  changeSound(2156, 0.5);
+  await sleep(10000);
+  wave.stop();
+}
 //choose the frequency to play depending on which seven bit number (ASCII) given
 //input ranges from 32 to 126 (for ASCII: SPACE to ~)
 //output ranges from minFreq to maxFreq
