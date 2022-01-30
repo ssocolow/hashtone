@@ -50,7 +50,7 @@ function getInput(){
 async function playRaw(raw) {
   wave = new p5.Oscillator();
   //Options: 'sine' (default), 'triangle', 'sawtooth', 'square' (Optional)
-  wave.setType('square');
+  wave.setType('sine');
   wave.start();
 
   //starting preamble to get the listener tracking
@@ -73,7 +73,7 @@ async function playRaw(raw) {
 async function preamble() {
   wave = new p5.Oscillator();
   //Options: 'sine' (default), 'triangle', 'sawtooth', 'square' (Optional)
-  wave.setType('square');
+  wave.setType('sine');
   wave.start();
 
   //starting preamble to get the listener tracking
