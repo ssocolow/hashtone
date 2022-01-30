@@ -9,8 +9,14 @@
 
   </head>
   <body>
+
     <script src="sketch.js"></script>
-    <button onclick="touchStarted()">Listen</button>
+    <form onsubmit="getInput(); return false;">
+    <input id="address" autofocus>
+    <button type="button" onclick="getInput()">Submit</button>
+    </form>
+ <button onclick="touchStarted()">Listen</button>
+ <h1 id="recieved">Recieved: </h1>
   </body>
 </html>
 

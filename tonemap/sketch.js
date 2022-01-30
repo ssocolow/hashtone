@@ -1,5 +1,18 @@
+//make global vars for mic and fast fourier transform and how many buckets we want fft to analyze with
 let mic, fft;
-let BUFFSIZE = 512;
+let BUFFSIZE = 1024;
+//make global var for oscillator to send data
+let wave;
+
+//this range of frequencies seems to have a stable bucket number with fft
+let minFreq = 2200;
+let maxFreq = 6840;
+
+//unused
+let diff = maxFreq - minFreq;
+let stepsize = diff/128;
+
+//first initialize the mic and fft but won't start working until user clicks the page
 function setup() {
   createCanvas(BUFFSIZE, 200);
   // Create an Audio input
@@ -8,7 +21,7 @@ function setup() {
   // start the Audio Input.
   // By default, it does not .connect() (to the computer speakers)
   mic.start();
-  fft = new p5.FFT(0.4,BUFFSIZE);
+  fft = new p5.FFT(0.3,BUFFSIZE);
   fft.setInput(mic);
 }
 
@@ -21,16 +34,90 @@ function touchStarted() {
   }
 }
 
+//when the user submits what they wrote
+function getInput(){
+  //get the message
+  let text = document.getElementById("address").value;
+  //encode it as UTF-8 which I will assume is same as ASCII
+  let encoder = new TextEncoder();
+  let raw = encoder.encode(text);
+  //convert the encoded string to music which will be played
+  playRaw(raw);
+}
 
+//async so can play music with specific time intervals
+async function playRaw(raw) {
+  wave = new p5.Oscillator();
+  //Options: 'sine' (default), 'triangle', 'sawtooth', 'square' (Optional)
+  wave.setType('square');
+  wave.start();
+  //for each ASCII character, I play a specific sound for a constant time
+  for(let i = 0; i < raw.length; i++){
+    changeSound(chooseSound(raw[i]),0.5);
+    await sleep(200);
+  }
+  wave.stop();
+}
+
+//choose the frequency to play depending on which seven bit number (ASCII) given
+//input ranges from 32 to 126 (for ASCII: SPACE to ~)
+//output ranges from minFreq to maxFreq
+function chooseSound(byt){
+  let hz = map(byt, 32, 126, minFreq, maxFreq);
+  return hz;
+}
+
+//simple change sound function
+function changeSound(freq, amp) {
+  wave.freq(freq);
+  wave.amp(amp);
+}
+
+//sleep function
+//https://stackoverflow.com/questions/951021/what-is-the-javascript-version-of-sleep
+function sleep(ms) {
+  return new Promise(resolve => setTimeout(resolve, ms));
+}
+
+//an array to keep characters
+let chars = [];
+
+//draw the spectrum accross the frequencies
 function draw() {
-   background(200);
-
+  background(200);
+  
+  //analyze the fft
   let spectrum = fft.analyze();
+  let bucket = analyzeFrequency(spectrum);
+  console.log(bucket);
+  
+  //map the bucket number into the ASCII char range
+  let charnum = map(bucket, 104, 316, 32, 126);
+  //https://developer.mozilla.org/en-US/docs/Web/API/TextDecoder
+  let utf8decoder = new TextDecoder();
+  //decode the char number to a character and push it into the array
+  let u8arr = new Uint8Array([round(charnum)]);
+  chars.push(utf8decoder.decode(u8arr));
 
+  //draw the frequency graph
   beginShape();
   for (i = 0; i < spectrum.length; i++) {
     vertex(i, map(spectrum[i], 0, 255, height, 0));
   }
   endShape();
+  //semi useless lines
+  line(50, 0, 50, height);
+  line(0, 140, width, 140);
  }
 
+//return the bucket with the frequency that is most prominent
+//buckets range from 104 (2200 Hz) to 316 (6840 Hz)
+function analyzeFrequency(spectrum) {
+  let max = 0;
+  for(let i = 100; i < 320; i++){
+    if(spectrum[i] > max){
+      max = i;
+    }
+  }
+  return max;
+}
