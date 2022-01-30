@@ -1,14 +1,15 @@
-let mic;
-
+let mic, fft;
+let BUFFSIZE = 512;
 function setup() {
-  createCanvas(710, 200);
-
+  createCanvas(BUFFSIZE, 200);
   // Create an Audio input
+  noFill();
   mic = new p5.AudioIn();
-
   // start the Audio Input.
   // By default, it does not .connect() (to the computer speakers)
   mic.start();
+  fft = new p5.FFT(0.4,BUFFSIZE);
+  fft.setInput(mic);
 }
 
 //looks like you have to interact with the browser in order to do audio stuff 
@@ -22,16 +23,14 @@ function touchStarted() {
 
 
 function draw() {
-  background(200);
+   background(200);
 
-  // Get the overall volume (between 0 and 1.0)
-  let vol = mic.getLevel();
-  console.log(vol);
-  fill(127);
-  stroke(0);
+  let spectrum = fft.analyze();
 
-  // Draw an ellipse with height based on volume
-  let h = map(vol, 0, 1, height, 0);
-  ellipse(width / 2, h - 25, 50, 50);
-}
+  beginShape();
+  for (i = 0; i < spectrum.length; i++) {
+    vertex(i, map(spectrum[i], 0, 255, height, 0));
+  }
+  endShape();
+ }
 
