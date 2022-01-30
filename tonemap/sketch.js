@@ -32,6 +32,7 @@ function touchStarted() {
   if (getAudioContext().state !== 'running') {
     getAudioContext().resume();
   }
+  listening = true;
 }
 
 //when the user submits what they wrote
@@ -51,11 +52,19 @@ async function playRaw(raw) {
   //Options: 'sine' (default), 'triangle', 'sawtooth', 'square' (Optional)
   wave.setType('square');
   wave.start();
+
+  //starting preamble to get the listener tracking
+  changeSound(2156, 0.5);
+  await sleep(1200);
   //for each ASCII character, I play a specific sound for a constant time
   for(let i = 0; i < raw.length; i++){
     changeSound(chooseSound(raw[i]),0.5);
-    await sleep(200);
+    await sleep(500);
   }
+
+  //ending preamble to tell listener when done
+  changeSound(2156, 0.5);
+  await sleep(1200);
   wave.stop();
 }
 
@@ -81,6 +90,31 @@ function sleep(ms) {
 
 //an array to keep characters
 let chars = [];
+//keep track of past buckets to filter out noise and only use sustained bucket
+let prev = [];
+
+//check if there are ten of the same buckets in the array, if not, empty the array, if yes return true
+//preamble will be bucket number 102 (2156 Hz)
+//same with ending preamble
+function checkBucket() {
+  for(let i = 0; i < prev.length; i++) {
+    if(102 == prev[i]){
+      ;
+    }else{
+      prev = [];
+      return false;
+    }
+    if(i > 60){
+      return true;
+    }
+  }
+  return false;
+}
+
+//audio context doesn't start so we shouldn't check until it's started
+let listening = false;
+//if we are listening to the message
+let startTracking = false;
 
 //draw the spectrum accross the frequencies
 function draw() {
@@ -90,14 +124,38 @@ function draw() {
   let spectrum = fft.analyze();
   let bucket = analyzeFrequency(spectrum);
   console.log(bucket);
+
+  if(!startTracking && listening){
+    prev.push(bucket);
+    if(checkBucket()) {
+      startTracking = true;
+      console.log("tracking");
+      prev = [];
+    }
+  }
   
-  //map the bucket number into the ASCII char range
-  let charnum = map(bucket, 104, 316, 32, 126);
-  //https://developer.mozilla.org/en-US/docs/Web/API/TextDecoder
-  let utf8decoder = new TextDecoder();
-  //decode the char number to a character and push it into the array
-  let u8arr = new Uint8Array([round(charnum)]);
-  chars.push(utf8decoder.decode(u8arr));
+  if(startTracking){
+    //map the bucket number into the ASCII char range
+    let charnum = map(bucket, 104, 316, 32, 126);
+    //https://developer.mozilla.org/en-US/docs/Web/API/TextDecoder
+    let utf8decoder = new TextDecoder();
+    //decode the char number to a character and push it into the array
+    let u8arr = new Uint8Array([round(charnum)]);
+    chars.push(utf8decoder.decode(u8arr));
+
+    //when hearing ending preamble
+    prev.push(bucket);
+    if(checkBucket()){
+      noLoop();
+      startTracking = false;
+      listening = false;
+      console.log("done listening");
+      console.log(chars);
+    }
+  }
+  //keep track of which frequency it is, check if there are 10 of that same frequency in a row, if there are, push that frequncy to the array
+
+
 
   //draw the frequency graph
   beginShape();
