@@ -106,23 +106,27 @@ let chars = [];
 //keep track of past buckets to filter out noise and only use sustained bucket
 let prev = [];
 
-//check if there are ten of the same buckets in the array, if not, empty the array, if yes return true
+
+//if there are ten buckets in the array, average them and if the rounded average is equal to 101 or 102 that will qualify as a preamble
 //preamble will be bucket number 102 (2156 Hz)
 //same with ending preamble
 function checkBucket() {
-  for(let i = 0; i < prev.length; i++) {
-    if(102 == prev[i]){
-      ;
+  if(prev.length == 10){
+    let sum = 0;
+    for(let i = 0; i < prev.length; i++) {
+      sum += prev[i];
+    }
+    let avg = round(sum/prev.length);
+
+    if(102 == avg || 101 == avg){
+      return true;
     }else{
       prev = [];
-      return false;
-    }
-    if(i > 60){
-      return true;
     }
   }
   return false;
 }
+
 
 //audio context doesn't start so we shouldn't check until it's started
 let listening = false;
