@@ -177,6 +177,7 @@ function draw() {
         listening = false;
         console.log("done listening");
         console.log(chars);
+        reConstruct(chars);
       }
     }
   }
@@ -194,6 +195,14 @@ function draw() {
   line(50, 0, 50, height);
   line(0, 140, width, 140);
  }
+
+//take in message array of chars and return the most common chars in order which will hopefully be the reconstructed message
+function reConstruct(arr){
+  //if string is longer than one char remove it
+  //https://stackoverflow.com/questions/15995963/javascript-remove-array-element-on-condition
+  arr = arr.filter(item => item.length == 1);
+  console.log(arr);
+}
 
 //return the bucket with the frequency that is most prominent
 //buckets range from 104 (2200 Hz) to 316 (6840 Hz)
