@@ -55,7 +55,7 @@ async function playRaw(raw) {
 
   //starting preamble to get the listener tracking
   changeSound(2164, 0.5);
-  await sleep(300);
+  await sleep(250);
   //for each ASCII character, I play a specific sound for a constant time
   for(let i = 0; i < raw.length; i++){
     changeSound(chooseSound(raw[i]),0.5);
@@ -64,7 +64,7 @@ async function playRaw(raw) {
 
   //ending preamble to tell listener when done
   changeSound(2164, 0.5);
-  await sleep(300);
+  await sleep(400);
   wave.stop();
 }
 
@@ -123,7 +123,7 @@ function checkBucket() {
     }
     let avg = round(sum/prev.length);
 
-    if(102 == avg && counthundreds < 5){
+    if((102 == avg || 101 == avg) && counthundreds < 5){
       return true;
     }else{
       prev = [];
