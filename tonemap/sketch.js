@@ -55,7 +55,7 @@ async function playRaw(raw) {
 
   //starting preamble to get the listener tracking
   changeSound(2160, 0.5);
-  await sleep(200);
+  await sleep(500);
   //for each ASCII character, I play a specific sound for a constant time
   for(let i = 0; i < raw.length; i++){
     changeSound(chooseSound(raw[i]),0.5);
@@ -64,7 +64,7 @@ async function playRaw(raw) {
 
   //ending preamble to tell listener when done
   changeSound(2160, 0.5);
-  await sleep(200);
+  await sleep(500);
   wave.stop();
 }
 
