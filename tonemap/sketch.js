@@ -55,7 +55,7 @@ async function playRaw(raw) {
 
   //starting preamble to get the listener tracking
   changeSound(2164, 0.5);
-  await sleep(250);
+  await sleep(400);
   //for each ASCII character, I play a specific sound for a constant time
   for(let i = 0; i < raw.length; i++){
     changeSound(chooseSound(raw[i]),0.5);
@@ -64,7 +64,7 @@ async function playRaw(raw) {
 
   //ending preamble to tell listener when done
   changeSound(2164, 0.5);
-  await sleep(400);
+  await sleep(500);
   wave.stop();
 }
 
@@ -124,6 +124,7 @@ function checkBucket() {
     let avg = round(sum/prev.length);
 
     if((102 == avg || 101 == avg) && counthundreds < 5){
+      startTime = millis();
       return true;
     }else{
       prev = [];
@@ -138,6 +139,8 @@ let listening = false;
 //if we are listening to the message
 let startTracking = false;
 
+//solving the start then stop before hearing the message problem: only check for ending preamble if more than 1 second after the beginning preamble
+let startTime = 0;
 //draw the spectrum accross the frequencies
 function draw() {
   background(200);
@@ -165,14 +168,16 @@ function draw() {
     let u8arr = new Uint8Array([round(charnum)]);
     chars.push(utf8decoder.decode(u8arr));
 
-    //when hearing ending preamble
-    prev.push(bucket);
-    if(checkBucket()){
-      noLoop();
-      startTracking = false;
-      listening = false;
-      console.log("done listening");
-      console.log(chars);
+    if(millis() - startTime > 1000){
+      //when hearing ending preamble
+      prev.push(bucket);
+      if(checkBucket()){
+        noLoop();
+        startTracking = false;
+        listening = false;
+        console.log("done listening");
+        console.log(chars);
+      }
     }
   }
   //keep track of which frequency it is, check if there are 10 of that same frequency in a row, if there are, push that frequncy to the array
