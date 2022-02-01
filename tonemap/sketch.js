@@ -55,7 +55,7 @@ async function playRaw(raw) {
 
   //starting preamble to get the listener tracking
   changeSound(2164, 0.5);
-  await sleep(400);
+  await sleep(500);
   //for each ASCII character, I play a specific sound for a constant time
   for(let i = 0; i < raw.length; i++){
     changeSound(chooseSound(raw[i]),0.5);
@@ -64,7 +64,7 @@ async function playRaw(raw) {
 
   //ending preamble to tell listener when done
   changeSound(2164, 0.5);
-  await sleep(500);
+  await sleep(600);
   wave.stop();
 }
 
@@ -177,7 +177,8 @@ function draw() {
         listening = false;
         console.log("done listening");
         console.log(chars);
-        reConstruct(chars);
+        let reconstructed = reConstruct(chars);
+        document.getElementById("recieved").innerHTML = reconstructed;
       }
     }
   }
@@ -197,11 +198,29 @@ function draw() {
  }
 
 //take in message array of chars and return the most common chars in order which will hopefully be the reconstructed message
+//if there are more than or equal to nine in a row then save that as one char
 function reConstruct(arr){
-  //if string is longer than one char remove it
-  //https://stackoverflow.com/questions/15995963/javascript-remove-array-element-on-condition
-  arr = arr.filter(item => item.length == 1);
-  console.log(arr);
+  //save unique characters one for each time in a row
+  let uniques = [];
+  let uindex = -1;
+  let streakcount = [];
+  for(let i = 0; i < arr.length; i++) {
+    if(uniques[uindex] == arr[i]){
+      streakcount[uindex]++;
+    }
+    else{
+      uindex++;
+      streakcount[uindex] = 0;
+      uniques.push(arr[i]);
+    }
+  }
+  let msg = "";
+  for(let i = 0; i < uniques.length; i++) {
+    if(streakcount[i] >= 9) {
+      msg += uniques[i];
+    }
+  }
+  return msg;
 }
 
 //return the bucket with the frequency that is most prominent
