@@ -1,0 +1,3 @@
+https://en.bitcoin.it/wiki/Script
+https://github.com/BlockchainCommons/Learning-Bitcoin-from-the-Command-Line/blob/82ca897286aac612804ae849b260750229fa3a52/08_2_Sending_a_Transaction_with_Data.md
+
