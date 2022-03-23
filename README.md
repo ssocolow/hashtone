@@ -1,4 +1,4 @@
-# hashtone
+# Hashtone: Developing Novel Information Interaction and Transmission Experiences Through Sound and Color
 
 This project aims to:  
 Improve cryptocurrency address verification by developing a specification to fingerprint digital information using sound and color.  
