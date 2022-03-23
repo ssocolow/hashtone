@@ -44,10 +44,9 @@ function getInput(){
   //encode it as UTF-8 which I will assume is same as ASCII
   let encoder = new TextEncoder();
   let raw = encoder.encode(text);
-  //convert the encoded string to music which will be played
-  console.log(raw);
   //convert the Uint8Array into one string on bits and add 
   msg_bit_string = uint8tobits(raw);
+  console.log("raw message text: " + msg_bit_string);
   //play the bit string
   playRaw(msg_bit_string);
 }
@@ -81,10 +80,29 @@ async function playRaw(bitstring) {
   changeSound(2200, 1);
   await sleep(1000);
 
+  console.log("starting message");
 
-  //send the bit string, 3 bits at a time
-  for(let i = 0; i < bitstring.length; i+=3){
-    changeSound(chooseSound(bitstring[i],bitstring[i+1],bitstring[i+2]),1);
+  //this is how much through the bitstring the for loop should increment, it should add three then three then one - repeat
+  let incer = 3;
+  //counting var to know when to switch incer
+  let count = 0;
+  //actually should send the characters where each character is sent as three frequencies.  Each ASCII character is seven bits so the first three bits will be frequency A, the second three bits will be frequency B, and the last bit will be either preamble (0) or highest frequency(1).
+  for(let i = 0; i < bitstring.length; i+=7){
+    let newsound;
+    
+    newsound = chooseSound(bitstring.substr(i,3));
+    changeSound(newsound,1);
+    console.log("new sound: " + newsound);
+    await sleep(100);
+   
+    newsound = chooseSound(bitstring.substr(i+3,3));
+    changeSound(newsound,1);
+    console.log("new sound: " + newsound);
+    await sleep(100);
+    
+    newsound = chooseSound(bitstring.substr(i+6,1));
+    changeSound(newsound,1);
+    console.log("new sound: " + newsound);
     await sleep(100);
   }
 
@@ -119,14 +137,27 @@ async function preamble() {
   wave.stop();
 }
 
-//choose the frequency that plays from the 3 bits from the string
+//choose the frequency that plays from the substring
 //will deal with endianness here by making the first bits most influential -- check here first if things aren't working, could have screwed this up pretty easily
-function chooseSound(bit1, bit2, bit3){
-  let index = 0;
-  index += parseInt(bit1,10)*4;
-  index += parseInt(bit2,10)*2;
-  index += parseInt(bit3,10)*1;
-  return freqs[index];
+function chooseSound(substring){
+  if(substring.length == 3){
+    let index = 0;
+    index += parseInt(substring[0],10)*4;
+    index += parseInt(substring[1],10)*2;
+    index += parseInt(substring[2],10)*1;
+    return freqs[index];
+  }
+  if(substring.length == 1){
+    if(substring == "1"){
+      return freqs[7];
+    }
+    else{
+      return 2200;
+    }
+  }
+  else{
+    console.error("not right length: " + substring);
+  }
 }
 
 //simple change sound function
@@ -177,7 +208,8 @@ let info = [];
 let myinfobuckets = [];
 
 //fill myinfobuckets with an array of the buckets where the info freqs go - index 0 is preamblebucket
-//return the index in info off the first preamble after the info freqs
+//return the index in info of the first preamble after the info freqs
+//here I know that consecutive frequencies are different
 function getInfoBuckets(){
   let run = 0;
   let recognized = [];
@@ -248,7 +280,7 @@ function draw() {
         let leaveoffpoint = getInfoBuckets();
         console.log("info buckets: " + myinfobuckets);
         //now start at the leaveoffpoint and decode the message! - from buckets to bitstring to full message, can reuse the getInfoBuckets logic
-        let reconstructed = reConstruct(leaveoffpoint);
+        let bitstring = reConstruct(leaveoffpoint);
         document.getElementById("recieved").innerHTML = reconstructed;
       }
     }
@@ -271,21 +303,29 @@ function draw() {
 //hold the decoded bit string
 let decodedbitstring;
 //hold the bucket parts of the message
-let messageparts = []
+let messageparts = [];
 //starts at the point in info where left off, then there is more preamble, then the message, then the preamble at the end
 function reConstruct(leaveoffpoint){
   let run = 0;
   let recognized = [];
+  //here I cannot assume that consecutive frequencies are different
   for(let i = leaveoffpoint; i < info.length; i++){
     if(Math.abs(info[i] - info[i+1]) < 5){
       recognized.push(Math.round((info[i] + info[i+1])/2));
     }else{
+      //if consecutive frequencies are more than four apart and the length of recognized is greater than 2
       if(recognized.length > 2){
+        //if the run is greater than 
         messageparts.push(roundedAverage(recognized));
+        //if there are more than 8 of similar frequency, I will assume it was two consecutive of the same frequency
+        if(recognized.length > 8){
+          messageparts.push(roundedAverage(recognized));
+        }
         recognized = [];
       }
     }
 }
+  console.log("before trim messageparts: " + messageparts);
   //go through messageparts and remove the elements that are not within 2 of a myinfobuckets and get to an array where all elements can be found in myinfobuckets
   for(let i = messageparts.length - 1; i > 0; i--){
     if(!myinfobuckets.includes(messageparts[i]) && !myinfobuckets.includes(messageparts[i] + 1) && !myinfobuckets.includes(messageparts[i] - 1) && !myinfobuckets.includes(messageparts[i] + 2) && !myinfobuckets.includes(messageparts[i] - 2)){ 
@@ -299,7 +339,7 @@ function reConstruct(leaveoffpoint){
       }
     }
   }
-  console.log(messageparts);
+  console.log("after trim messageparts: " + messageparts);
 
 }
 
