@@ -9,7 +9,9 @@ let minFreq = 2200;
 let maxFreq = 6840;
 
 //the 8 frequencies that the sender will use, sufficiently far apart from each other
-let freqs = [2400, 2600, 2800, 3000, 3200, 3400, 3600, 3800];
+//let freqs = [2400, 2600, 2800, 3000, 3200, 3400, 3600, 3800];
+//make them farther apart
+let freqs = [2400, 2800, 3200, 3400, 3800, 4200, 4600, 5000];
 
 //first initialize the mic and fft but won't start working until user clicks the page
 function setup() {
@@ -20,7 +22,7 @@ function setup() {
   // start the Audio Input.
   // By default, it does not .connect() (to the computer speakers)
   mic.start();
-  fft = new p5.FFT(0.3,BUFFSIZE);
+  fft = new p5.FFT(0.6,BUFFSIZE);
   fft.setInput(mic);
 }
 
@@ -73,7 +75,7 @@ async function playRaw(bitstring) {
   //calibrate with the 8 info freqs
   for(let i = 0; i < freqs.length; i++){
     changeSound(freqs[i],1);
-    await sleep(100);
+    await sleep(150);
   }
   
   //play the preamble right after to signify that those in-between frequencies are the info ones
@@ -93,17 +95,17 @@ async function playRaw(bitstring) {
     newsound = chooseSound(bitstring.substr(i,3));
     changeSound(newsound,1);
     console.log("new sound: " + newsound);
-    await sleep(100);
+    await sleep(200);
    
     newsound = chooseSound(bitstring.substr(i+3,3));
     changeSound(newsound,1);
     console.log("new sound: " + newsound);
-    await sleep(100);
+    await sleep(200);
     
     newsound = chooseSound(bitstring.substr(i+6,1));
     changeSound(newsound,1);
     console.log("new sound: " + newsound);
-    await sleep(100);
+    await sleep(200);
   }
 
   //ending preamble to tell listener when done
@@ -211,10 +213,9 @@ let myinfobuckets = [];
 //return the index in info of the first preamble after the info freqs
 //here I know that consecutive frequencies are different
 function getInfoBuckets(){
-  let run = 0;
   let recognized = [];
-  for(let i = 0; i < 100; i++){
-    if(Math.abs(info[i] - info[i+1]) < 5){
+  for(let i = 0; i < 150; i++){
+    if(Math.abs(info[i] - info[i+1]) < 6){
       recognized.push(Math.round((info[i] + info[i+1])/2));
     }else{
       myinfobuckets.push(roundedAverage(recognized));
@@ -278,7 +279,7 @@ function draw() {
         listening = false;
         console.log("done listening");
         let leaveoffpoint = getInfoBuckets();
-        console.log("info buckets: " + myinfobuckets);
+        console.log("my info buckets: " + myinfobuckets);
         //now start at the leaveoffpoint and decode the message! - from buckets to bitstring to full message, can reuse the getInfoBuckets logic
         let bitstring = reConstruct(leaveoffpoint);
         document.getElementById("recieved").innerHTML = reconstructed;
@@ -310,7 +311,7 @@ function reConstruct(leaveoffpoint){
   let recognized = [];
   //here I cannot assume that consecutive frequencies are different
   for(let i = leaveoffpoint; i < info.length; i++){
-    if(Math.abs(info[i] - info[i+1]) < 5){
+    if(Math.abs(info[i] - info[i+1]) < 9){
       recognized.push(Math.round((info[i] + info[i+1])/2));
     }else{
       //if consecutive frequencies are more than four apart and the length of recognized is greater than 2
@@ -340,6 +341,29 @@ function reConstruct(leaveoffpoint){
     }
   }
   console.log("after trim messageparts: " + messageparts);
+  
+  //hold the single values for the info buckets
+  let singles = [];
+  let finishedpreamble = false;
+  //sometimes I guess it works so we'll go with that
+  for(let i = 0; i < messageparts.length; i++){
+    //skip over preambles at start
+    if(messageparts[i] == myinfobuckets[0] && !finishedpreamble){
+      finishedpreamble = true;
+    }
+    else{
+      if(messageparts[i] == messageparts[i+1]){
+        //skip one more forward on i
+        i++;
+        //add it to singles (both are the same)
+        singles.push(messageparts[i]);
+      }
+      else{
+        singles.push(messageparts[i]);
+      }
+    }
+  }
+  console.log("singles: " + singles);
 
 }
 
